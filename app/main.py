@@ -135,6 +135,11 @@ async def start_fastapi():
 # main
 async def main():
     load_dotenv()
+
+    # デバッグ用
+    print(f"intents.voice_states = {intents.voice_states}")
+    print(f"intents.members = {intents.members}")
+
     try:
         await asyncio.gather(
             start_fastapi(),
