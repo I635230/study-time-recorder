@@ -15,7 +15,7 @@ intents.guilds = True
 voice_start_times = {}
 voice_durations = defaultdict(datetime.timedelta)  # 累積時間記録用
 
-TARGET_CHANNEL_NAME = "bot-test"  # 通知するチャンネル名
+TARGET_CHANNEL_NAME = "記録用"  # 通知するチャンネル名
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -99,8 +99,15 @@ async def daily_report_task():
         if not voice_durations:
             continue
 
+        # 投稿数から何日目かをカウント
+        count = 0
+        async for _ in text_channel.history(limit=None):
+            count += 1
+        report_headers = [f"{count+1}日目"]
+        report_headers.append("📊 本日の学習記録：")
+        report_lines = [""]
+
         # 学習記録の投稿
-        report_lines = ["📊 本日の学習記録："]
         for member_id, duration in voice_durations.items():
             member = guild.get_member(member_id)
             if member:
@@ -109,11 +116,10 @@ async def daily_report_task():
                 if h > 0 or m > 0:
                     report_lines.append(f"- {member.display_name}: {h}時間{m}分")
 
-        # 本番用
-        # await text_channel.send("\n".join(report_lines))
-
-        # デバッグ用
-        print("\n".join(report_lines))
+        if report_lines != [""]: 
+            content = "\n".join(report_headers) + "\n".join(report_lines)
+            # print(content) # デバッグ用
+            await text_channel.send(content) # 本番用
 
     voice_durations.clear()
 
