@@ -7,3 +7,7 @@ services:
     tty: true
     volumes:
       - ./app:/root/app
+  web:
+    build: .
+    ports:
+      - "8000:8000"
