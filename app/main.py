@@ -34,6 +34,7 @@ async def start_fastapi():
     await server.serve()
 
 @app.get("/")
+@app.head("/")
 def read_root():
     return {"status": "ok"}
 
