@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from server import server_thread
 
 intents = discord.Intents.default()
+intents.message_content = True
 intents.voice_states = True
 intents.members = True
 intents.guilds = True
