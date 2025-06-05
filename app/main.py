@@ -85,8 +85,6 @@ async def daily_report_task():
     now = get_now_jst()
     next_midnight = (now + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
     wait_seconds = (next_midnight - now).total_seconds()
-
-    wait_seconds = 70 # 後で削除
     logger.info(f"24時になるまで{wait_seconds}秒待機中...")
 
     await asyncio.sleep(wait_seconds)
@@ -137,8 +135,8 @@ async def daily_report_task():
 
         if report_lines != [""]: 
             content = "\n".join(report_headers) + "\n".join(report_lines)
-            logger.info(content) # デバッグ用
-            # await text_channel.send(content) # 本番用
+            # logger.info(content) # デバッグ用
+            await text_channel.send(content) # 本番用
 
     voice_durations.clear()
 
