@@ -5,7 +5,9 @@ import asyncio
 from collections import defaultdict
 import os
 from dotenv import load_dotenv
-from server import server_thread
+import asyncio
+import uvicorn
+from server import app
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -16,7 +18,7 @@ intents.guilds = True
 voice_start_times = {}
 voice_durations = defaultdict(datetime.timedelta)  # 累積時間記録用
 
-TARGET_CHANNEL_NAME = "bot-test"  # 通知するチャンネル名
+TARGET_CHANNEL_NAME = "記録用"  # 通知するチャンネル名
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -124,8 +126,20 @@ async def daily_report_task():
 
     voice_durations.clear()
 
-# Koyeb用 サーバー立ち上げ
-server_thread()
+# FastAPI
+async def start_fastapi():
+    config = uvicorn.Config(app=app, host="0.0.0.0", port=8080)
+    server = uvicorn.Server(config)
+    await server.serve()
 
-load_dotenv()
-bot.run(os.getenv("DISCORD_TOKEN"))
+# main
+async def main():
+    load_dotenv()
+    # FastAPIとBotを同時起動
+    await asyncio.gather(
+        start_fastapi(),
+        bot.start(os.getenv("DISCORD_TOKEN"))
+    )
+
+if __name__ == "__main__":
+    asyncio.run(main())
