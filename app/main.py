@@ -16,7 +16,7 @@ intents.guilds = True
 voice_start_times = {}
 voice_durations = defaultdict(datetime.timedelta)  # 累積時間記録用
 
-TARGET_CHANNEL_NAME = "記録用"  # 通知するチャンネル名
+TARGET_CHANNEL_NAME = "bot-test"  # 通知するチャンネル名
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
