@@ -135,11 +135,13 @@ async def start_fastapi():
 # main
 async def main():
     load_dotenv()
-    # FastAPIとBotを同時起動
-    await asyncio.gather(
-        start_fastapi(),
-        bot.start(os.getenv("DISCORD_TOKEN"))
-    )
+    try:
+        await asyncio.gather(
+            start_fastapi(),
+            bot.start(os.getenv("DISCORD_TOKEN"))
+        )
+    except Exception as e:
+        print(f"起動中にエラーが発生しました: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
