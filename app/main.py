@@ -137,16 +137,17 @@ async def daily_report_task():
     voice_durations.clear()
 
 # main
-async def main():
-    load_dotenv()
+# async def main():
+#     load_dotenv()
 
-    try:
-        await asyncio.gather(
-            # start_fastapi(),
-            bot.start(os.getenv("DISCORD_TOKEN"))
-        )
-    except Exception as e:
-        print(f"起動中にエラーが発生しました: {e}")
+#     try:
+#         await asyncio.gather(
+#             # start_fastapi(),
+#             bot.start(os.getenv("DISCORD_TOKEN"))
+#         )
+#     except Exception as e:
+#         print(f"起動中にエラーが発生しました: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # asyncio.run(main())
+    bot.start(os.getenv("DISCORD_TOKEN"))
