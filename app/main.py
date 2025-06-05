@@ -25,7 +25,7 @@ app = FastAPI()
 
 # FastAPI
 async def start_fastapi():
-    config = uvicorn.Config(app=app, host="0.0.0.0", port=8000)
+    config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, access_log=False) # アクセスログを非表示
     server = uvicorn.Server(config)
     await server.serve()
 
@@ -81,6 +81,8 @@ async def daily_report_task():
     now = get_now_jst()
     next_midnight = (now + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
     wait_seconds = (next_midnight - now).total_seconds()
+
+    wait_seconds = 70 # 後で削除
     print(f"24時になるまで{wait_seconds}秒待機中...")
 
     await asyncio.sleep(wait_seconds)
@@ -131,8 +133,8 @@ async def daily_report_task():
 
         if report_lines != [""]: 
             content = "\n".join(report_headers) + "\n".join(report_lines)
-            # print(content) # デバッグ用
-            await text_channel.send(content) # 本番用
+            print(content) # デバッグ用
+            # await text_channel.send(content) # 本番用
 
     voice_durations.clear()
 
