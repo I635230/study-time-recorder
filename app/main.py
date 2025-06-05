@@ -147,6 +147,8 @@ async def main():
     thread = threading.Thread(target=run_fastapi, daemon=True)
     thread.start()
 
+    print(os.getenv("DISCORD_TOKEN"))
+
     try:
         await bot.start(os.getenv("DISCORD_TOKEN"))
     except Exception as e:
