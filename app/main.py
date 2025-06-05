@@ -25,7 +25,7 @@ app = FastAPI()
 
 # FastAPI
 async def start_fastapi():
-    config = uvicorn.Config(app=app, host="0.0.0.0", port=8000)
+    config = uvicorn.Config(app=app, host="0.0.0.0", port=8000, access_log=False)
     server = uvicorn.Server(config)
     await server.serve()
 
@@ -36,13 +36,13 @@ def read_root():
 # 関数の登録
 def handle_vc_join(member, before, after):
     if before.channel is None and after.channel is not None:
-        print(f"{member.display_name} がVCに参加しました。")
+        print(f"{member.display_name} がVCに参加しました。", flush=True)
         return True
     return False
 
 def handle_vc_leave(member, before, after):
     if before.channel is not None and after.channel is None:
-        print(f"{member.display_name} がVCから退出しました。")
+        print(f"{member.display_name} がVCから退出しました。", flush=True)
         return True
     return False
 
@@ -50,11 +50,11 @@ def get_now_jst():
     return datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
 
 def duration_start(member, now): 
-    print(f"{member.display_name} の学習時間の計測を開始しました。")
+    print(f"{member.display_name} の学習時間の計測を開始しました。", flush=True)
     voice_start_times[member.id] = now
 
 def duration_end(member, now, start): 
-    print(f"{member.display_name} の学習時間の計測を終了しました。")
+    print(f"{member.display_name} の学習時間の計測を終了しました。", flush=True)
     duration = now - start
     voice_durations[member.id] += duration
 
@@ -62,7 +62,7 @@ def duration_end(member, now, start):
 # イベントハンドラの登録
 @bot.event
 async def on_ready():
-    print(f"{bot.user} 起動完了")
+    print(f"{bot.user} 起動完了", flush=True)
     daily_report_task.start()  # 起動時に定期タスクを開始
 
 @bot.event
@@ -83,11 +83,11 @@ async def daily_report_task():
     wait_seconds = (next_midnight - now).total_seconds()
 
     wait_seconds = 70 # 後で削除
-    print(f"24時になるまで{wait_seconds}秒待機中...")
+    print(f"24時になるまで{wait_seconds}秒待機中...", flush=True)
 
     await asyncio.sleep(wait_seconds)
 
-    print("24時になりました。")
+    print("24時になりました。", flush=True)
     now = get_now_jst() # 現在時刻の更新
 
     # ------------------------------------
@@ -133,7 +133,7 @@ async def daily_report_task():
 
         if report_lines != [""]: 
             content = "\n".join(report_headers) + "\n".join(report_lines)
-            print(content) # デバッグ用
+            print(content, flush=True) # デバッグ用
             # await text_channel.send(content) # 本番用
 
     voice_durations.clear()
@@ -148,7 +148,7 @@ async def main():
             bot.start(os.getenv("DISCORD_TOKEN"))
         )
     except Exception as e:
-        print(f"起動中にエラーが発生しました: {e}")
+        print(f"起動中にエラーが発生しました: {e}", flush=True)
 
 if __name__ == "__main__":
     asyncio.run(main())
