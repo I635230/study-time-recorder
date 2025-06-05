@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 import asyncio
 import uvicorn
-from server import app
+from fastapi import FastAPI
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -21,7 +21,17 @@ voice_durations = defaultdict(datetime.timedelta)  # 累積時間記録用
 TARGET_CHANNEL_NAME = "記録用"  # 通知するチャンネル名
 
 bot = commands.Bot(command_prefix="!", intents=intents)
+app = FastAPI()
 
+# FastAPI
+async def start_fastapi():
+    config = uvicorn.Config(app=app, host="0.0.0.0", port=8000)
+    server = uvicorn.Server(config)
+    await server.serve()
+
+@app.get("/")
+async def root():
+    return {"message": "Server is Online."}
 
 # 関数の登録
 def handle_vc_join(member, before, after):
@@ -126,19 +136,9 @@ async def daily_report_task():
 
     voice_durations.clear()
 
-# FastAPI
-async def start_fastapi():
-    config = uvicorn.Config(app=app, host="0.0.0.0", port=8000)
-    server = uvicorn.Server(config)
-    await server.serve()
-
 # main
 async def main():
     load_dotenv()
-
-    # デバッグ用
-    print(f"intents.voice_states = {intents.voice_states}")
-    print(f"intents.members = {intents.members}")
 
     try:
         await asyncio.gather(
