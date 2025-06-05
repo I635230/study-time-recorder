@@ -150,4 +150,5 @@ async def daily_report_task():
 
 if __name__ == "__main__":
     # asyncio.run(main())
-    bot.start(os.getenv("DISCORD_TOKEN"))
+    load_dotenv()
+    bot.run(os.getenv("DISCORD_TOKEN"))
