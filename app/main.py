@@ -142,7 +142,7 @@ async def main():
 
     try:
         await asyncio.gather(
-            start_fastapi(),
+            # start_fastapi(),
             bot.start(os.getenv("DISCORD_TOKEN"))
         )
     except Exception as e:
