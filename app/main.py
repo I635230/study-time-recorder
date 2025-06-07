@@ -84,13 +84,18 @@ async def on_voice_state_update(member, before, after):
 async def daily_report_task():
     await bot.wait_until_ready()
     now = get_now_jst()
-    next_midnight = (now + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-    wait_seconds = (next_midnight - now).total_seconds()
-    logger.info(f"24時になるまで{wait_seconds}秒待機中...")
+    today_3am = now.replace(hour=3, minute=0, second=0, microsecond=0)
+
+    if now < today_3am:
+        next_3am = today_3am
+    else:
+        next_3am = (now + datetime.timedelta(days=1)).replace(hour=3, minute=0, second=0, microsecond=0)
+    wait_seconds = (next_3am - now).total_seconds()
+    logger.info(f"3時になるまで{wait_seconds}秒待機中...")
 
     await asyncio.sleep(wait_seconds)
 
-    logger.info("24時になりました。")
+    logger.info("3時になりました。")
     now = get_now_jst() # 現在時刻の更新
 
     # ------------------------------------
