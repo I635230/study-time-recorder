@@ -9,6 +9,7 @@ import asyncio
 import uvicorn
 from fastapi import FastAPI
 import logging
+import json
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,6 +24,8 @@ voice_start_times = {}
 voice_durations = defaultdict(datetime.timedelta)  # 累積時間記録用
 
 TARGET_CHANNEL_NAME = "記録用"  # 通知するチャンネル名
+
+BACKUP_FILE = "voice_backup.json"
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 app = FastAPI()
@@ -63,13 +66,32 @@ def duration_end(member, now, start):
     duration = now - start
     voice_durations[member.id] += duration
 
+def get_all_voice_member_ids(guild):
+    member_ids = []
+    for vc in guild.voice_channels:
+        for member in vc.members:
+            member_ids.append(member.id)
+    return member_ids
+
+def handle_vc_joining(): 
+    # Botが参加中のチャンネルを取得
+    for guild in bot.guilds:
+        now = get_now_jst()
+        for member_id in get_all_voice_member_ids(guild): 
+            voice_start_times[member_id] = now
 
 # イベントハンドラの登録
+
+# 起動時
 @bot.event
 async def on_ready():
     logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: {bot.user} 起動完了")
-    daily_report_task.start()  # 起動時に定期タスクを開始
+    load_backup() # バックアップからdurationを読み込み
+    handle_vc_joining() # VC参加中のメンバーがいたらvoice_start_timeに記録
+    daily_report_task.start() # 起動時に定期タスクを開始
+    backup_task.start() # 起動時にバックアップタスクを開始
 
+# 通話状態変化時
 @bot.event
 async def on_voice_state_update(member, before, after):
     now = get_now_jst()
@@ -80,6 +102,7 @@ async def on_voice_state_update(member, before, after):
         start = voice_start_times.pop(member.id, None)
         duration_end(member, now, start)
 
+# 24時間に1回実行
 @tasks.loop(hours=24)
 async def daily_report_task():
     await bot.wait_until_ready()
@@ -90,7 +113,10 @@ async def daily_report_task():
         next_3am = today_3am
     else:
         next_3am = (now + datetime.timedelta(days=1)).replace(hour=3, minute=0, second=0, microsecond=0)
+
+    # 待機時間
     wait_seconds = (next_3am - now).total_seconds()
+
     logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: 3時になるまで{wait_seconds}秒待機中...")
 
     await asyncio.sleep(wait_seconds)
@@ -144,7 +170,49 @@ async def daily_report_task():
             # logger.info(content) # デバッグ用
             await text_channel.send(content) # 本番用
 
+    # 通話時間のリセット
     voice_durations.clear()
+    reset_backup()
+
+# 10秒に1回実行
+@tasks.loop(seconds=10)
+async def backup_task():
+    save_backup()
+
+# バックアップメソッド
+def save_backup():
+    try:
+        # durationの計算
+        for member_id, member_voice_start_time in voice_start_times.items(): 
+            now = get_now_jst()
+            voice_durations[member_id] += now - member_voice_start_time
+            voice_start_times[member_id] = now
+
+        # データをバックアップ
+        data = {
+            "durations": {str(k): d.total_seconds() for k, d in voice_durations.items()}
+        }
+        with open(BACKUP_FILE, "w") as f:
+            json.dump(data, f)
+    except Exception as e:
+        logger.warning(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: バックアップ保存失敗: {e}")
+
+def load_backup():
+    if not os.path.exists(BACKUP_FILE):
+        return
+    try:
+        with open(BACKUP_FILE, "r") as f:
+            data = json.load(f)
+        for member_id, member_voice_durations in data.get("durations", {}).items():
+            voice_durations[int(member_id)] = datetime.timedelta(seconds=member_voice_durations)
+        logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: バックアップを復元しました")
+    except Exception as e:
+        logger.warning(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: バックアップ復元失敗: {e}")
+
+def reset_backup():
+    with open("voice_backup.json", "w") as f:
+        json.dump({"durations": {}}, f)
+    logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: voice_backup.json を初期化しました")
 
 # main
 async def main():
