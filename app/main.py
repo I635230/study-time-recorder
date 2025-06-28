@@ -41,13 +41,13 @@ def read_root():
 # 関数の登録
 def handle_vc_join(member, before, after):
     if before.channel is None and after.channel is not None:
-        logger.info(f"{member.display_name} がVCに参加しました。")
+        logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: {member.display_name} がVCに参加しました。")
         return True
     return False
 
 def handle_vc_leave(member, before, after):
     if before.channel is not None and after.channel is None:
-        logger.info(f"{member.display_name} がVCから退出しました。")
+        logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: {member.display_name} がVCから退出しました。")
         return True
     return False
 
@@ -55,11 +55,11 @@ def get_now_jst():
     return datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
 
 def duration_start(member, now): 
-    logger.info(f"{member.display_name} の学習時間の計測を開始しました。")
+    logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: {member.display_name} の学習時間の計測を開始しました。")
     voice_start_times[member.id] = now
 
 def duration_end(member, now, start): 
-    logger.info(f"{member.display_name} の学習時間の計測を終了しました。")
+    logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: {member.display_name} の学習時間の計測を終了しました。")
     duration = now - start
     voice_durations[member.id] += duration
 
@@ -67,7 +67,7 @@ def duration_end(member, now, start):
 # イベントハンドラの登録
 @bot.event
 async def on_ready():
-    logger.info(f"{bot.user} 起動完了")
+    logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: {bot.user} 起動完了")
     daily_report_task.start()  # 起動時に定期タスクを開始
 
 @bot.event
@@ -91,11 +91,11 @@ async def daily_report_task():
     else:
         next_3am = (now + datetime.timedelta(days=1)).replace(hour=3, minute=0, second=0, microsecond=0)
     wait_seconds = (next_3am - now).total_seconds()
-    logger.info(f"3時になるまで{wait_seconds}秒待機中...")
+    logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: 3時になるまで{wait_seconds}秒待機中...")
 
     await asyncio.sleep(wait_seconds)
 
-    logger.info("3時になりました。")
+    logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: 3時になりました。")
     now = get_now_jst() # 現在時刻の更新
 
     # ------------------------------------
@@ -156,7 +156,7 @@ async def main():
             bot.start(os.getenv("DISCORD_TOKEN"))
         )
     except Exception as e:
-        logger.info(f"起動中にエラーが発生しました: {e}")
+        logger.info(f"{datetime.datetime.now().strftime('%Y/%m/%d %H:%M')}: 起動中にエラーが発生しました: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
